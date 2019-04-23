@@ -209,8 +209,10 @@ class Parser implements ParserInterface
         $host = '[^ ]+';
         $nick = "(?:[\\*$letter$special][$letter$number$special-]*)";
         $user = "(?:[^ $null$crlf@]+)";
+        $tag = "[^=]+?=[^ ;]*?;?";
+        $tags = "(?:@($tag)+) ?";
         $prefix = "(?:(?:(?P<nick>$nick)(?:!(?P<user>$user))?(?:@(?P<host>$host))?)|(?P<servername>$host))";
-        $message = "(?P<prefix>:$prefix )?$command$params$crlf";
+        $message = "(?P<tags>$tags)?(?P<prefix>:$prefix )?$command$params$crlf";
         $this->message = "/^$message\$/SU";
 
         $chstring = "[^ \a$null,$crlf]+";
@@ -440,6 +442,12 @@ class Parser implements ParserInterface
                         $parsed['params']['all'] = $all;
                     }
                 }
+            }
+        }
+
+        if (isset($parsed['tags']) && preg_match_all('/@?([^;=]+)=([^ ;]*)/i', $parsed['tags'], $tags)) {
+            if ($tags[1] && $tags[2]) {
+                $parsed['tags'] = array_combine($tags[1], $tags[2]);
             }
         }
 
